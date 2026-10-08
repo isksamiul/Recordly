@@ -5,8 +5,10 @@ import {
 	destroyPixiApplication,
 	destroyPixiContainer,
 	formatPixiRendererErrorMessage,
+	identifyPixiRendererBackend,
 	initializePixiApplication,
 	initializePixiApplicationWithTimeout,
+	isCanvasRenderer,
 } from "./pixiApplicationLifecycle";
 
 function createContainer(destroyed = false) {
@@ -20,12 +22,17 @@ function createContainer(destroyed = false) {
 	return container;
 }
 
-function createApplication(init: () => Promise<void> = async () => undefined) {
+function createApplication(
+	init: () => Promise<void> = async () => undefined,
+	renderer: Record<string, unknown> = {},
+) {
 	return {
 		init: vi.fn(init),
 		destroy: vi.fn(),
 		stage: { destroy: vi.fn() },
-		renderer: { destroy: vi.fn() },
+		renderer: Object.assign(renderer, {
+			destroy: (renderer as { destroy?: unknown }).destroy ?? vi.fn(),
+		}),
 	} as unknown as Application;
 }
 
@@ -152,6 +159,83 @@ describe("Pixi application lifecycle", () => {
 		it("handles non-Error objects safely", () => {
 			expect(formatPixiRendererErrorMessage("string error")).toBe("string error");
 			expect(formatPixiRendererErrorMessage(null)).toBe("Unknown renderer init error");
+		});
+	});
+
+	describe("identifyPixiRendererBackend and isCanvasRenderer", () => {
+		it("identifies webgpu from renderer name", () => {
+			const app = createApplication(undefined, { name: "webgpu" });
+			expect(identifyPixiRendererBackend(app)).toBe("webgpu");
+			expect(isCanvasRenderer(app)).toBe(false);
+		});
+
+		it("identifies webgl from renderer name", () => {
+			const app = createApplication(undefined, { name: "webgl" });
+			expect(identifyPixiRendererBackend(app)).toBe("webgl");
+			expect(isCanvasRenderer(app)).toBe(false);
+		});
+
+		it("identifies webgpu from renderer constructor", () => {
+			class WebGPURenderer {
+				destroy = vi.fn();
+			}
+			const app = createApplication(undefined, new WebGPURenderer() as never);
+			expect(identifyPixiRendererBackend(app)).toBe("webgpu");
+		});
+
+		it("identifies webgl from renderer constructor", () => {
+			class WebGLRenderer {
+				destroy = vi.fn();
+			}
+			const app = createApplication(undefined, new WebGLRenderer() as never);
+			expect(identifyPixiRendererBackend(app)).toBe("webgl");
+		});
+
+		it("identifies webgl from renderer type 1 and webgpu from renderer type 2", () => {
+			const appGl = createApplication(undefined, { type: 1 });
+			expect(identifyPixiRendererBackend(appGl)).toBe("webgl");
+
+			const appGpu = createApplication(undefined, { type: 2 });
+			expect(identifyPixiRendererBackend(appGpu)).toBe("webgpu");
+		});
+
+		it("detects canvas renderer fallback and returns null for backend", () => {
+			class CanvasRenderer {
+				destroy = vi.fn();
+			}
+			const app = createApplication(undefined, new CanvasRenderer() as never);
+			expect(isCanvasRenderer(app)).toBe(true);
+			expect(identifyPixiRendererBackend(app)).toBe(null);
+		});
+
+		it("returns null for missing application or renderer", () => {
+			expect(identifyPixiRendererBackend(null)).toBe(null);
+			expect(identifyPixiRendererBackend(undefined)).toBe(null);
+			expect(isCanvasRenderer(null)).toBe(false);
+		});
+	});
+
+	describe("initializePixiApplicationWithTimeout backend resolution", () => {
+		it("resolves to actual webgl backend when requested webgpu falls back to webgl", async () => {
+			const app = createApplication(undefined, { name: "webgl" });
+			const resolvedBackend = await initializePixiApplicationWithTimeout(
+				app,
+				{ preference: "webgpu" },
+				1000,
+				"webgpu",
+			);
+			expect(resolvedBackend).toBe("webgl");
+		});
+
+		it("resolves to webgpu when webgpu is initialized", async () => {
+			const app = createApplication(undefined, { name: "webgpu" });
+			const resolvedBackend = await initializePixiApplicationWithTimeout(
+				app,
+				{ preference: "webgpu" },
+				1000,
+				"webgpu",
+			);
+			expect(resolvedBackend).toBe("webgpu");
 		});
 	});
 });

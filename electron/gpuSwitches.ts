@@ -5,11 +5,24 @@ export interface GpuSwitches {
 }
 
 
+/**
+ * Determines whether the Linux EGL backend should be forced via environment flags.
+ *
+ * @param env - Process environment variables.
+ * @returns True if RECORDLY_FORCE_EGL is set to "1" or "true", false otherwise.
+ */
 export function shouldForceLinuxEgl(env: NodeJS.ProcessEnv): boolean {
 	const flag = env.RECORDLY_FORCE_EGL?.trim().toLowerCase();
 	return flag === "1" || flag === "true";
 }
 
+/**
+ * Computes platform-specific Chromium GPU switches and feature flags for hardware acceleration.
+ *
+ * @param platform - The host OS platform ("darwin", "win32", "linux").
+ * @param env - Process environment variables.
+ * @returns An object containing recommended GPU flags and disabled features.
+ */
 export function getGpuSwitches(
 	platform: NodeJS.Platform,
 	env: NodeJS.ProcessEnv = process.env,

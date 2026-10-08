@@ -12,6 +12,12 @@ type Options = {
 type Variant = "default" | "accent" | "success" | "warning" | "danger";
 const ids = new Map<string | number, string>();
 
+/**
+ * Extracts plain text content from a ReactNode tree for clipboard operations.
+ *
+ * @param value - The ReactNode to extract text from.
+ * @returns Plain text representation.
+ */
 function plainText(value: ReactNode): string {
 	if (typeof value === "string" || typeof value === "number") return String(value);
 	if (Array.isArray(value)) return value.map(plainText).join("");
@@ -19,7 +25,14 @@ function plainText(value: ReactNode): string {
 	return "";
 }
 
-// Keep existing callers compatible while HeroUI owns the queue and presentation.
+/**
+ * Dispatches a toast notification compatible with HeroUI, including an optional error copy action.
+ *
+ * @param title - The title or primary content of the toast.
+ * @param options - Notification options such as description, duration, and actions.
+ * @param variant - Toast color and style variant.
+ * @returns The toast identifier.
+ */
 function notify(title: ReactNode, options: Options = {}, variant: Variant = "default") {
 	const errorText = [plainText(title), plainText(options.description)]
 		.filter(Boolean)

@@ -43,6 +43,11 @@ type Props = {
 	accountId?: string;
 };
 
+/**
+ * Video editor export menu providing export configuration, status feedback, and triggers.
+ *
+ * @param props - Component props including export settings, dimensions, status, and callbacks.
+ */
 export function EditorExportMenu(props: Props) {
 	const { publishDestination: destination, setPublishDestination: setDestination } =
 		props.exportSettings;

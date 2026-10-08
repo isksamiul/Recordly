@@ -1,6 +1,9 @@
 /**
  * Cross-platform clipboard helper.
  * Tries Electron native clipboard IPC first, then navigator.clipboard, and finally document.execCommand fallback.
+ *
+ * @param text - The text string to copy to the clipboard.
+ * @returns Promise resolving to true if copying succeeded, false otherwise.
  */
 export async function copyTextToClipboard(text: string): Promise<boolean> {
 	if (typeof window !== "undefined" && window.electronAPI?.writeClipboardText) {

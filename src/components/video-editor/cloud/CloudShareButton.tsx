@@ -40,6 +40,11 @@ type Props = {
 	onRequestSignIn?: () => void;
 };
 
+/**
+ * Cloud share button component for uploading recordings and copying shareable URLs.
+ *
+ * @param props - Component props including project identifiers, authentication token, and callbacks.
+ */
 export function CloudShareButton({
 	projectPath,
 	filePath,
