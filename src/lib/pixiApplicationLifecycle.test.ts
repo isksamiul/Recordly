@@ -1,8 +1,10 @@
 import type { Application } from "pixi.js";
 import { describe, expect, it, vi } from "vitest";
 import {
+	CANVAS_RENDERER_FALLBACK_MESSAGE,
 	destroyPixiApplication,
 	destroyPixiContainer,
+	formatPixiRendererErrorMessage,
 	initializePixiApplication,
 	initializePixiApplicationWithTimeout,
 } from "./pixiApplicationLifecycle";
@@ -134,5 +136,22 @@ describe("Pixi application lifecycle", () => {
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+
+	describe("formatPixiRendererErrorMessage", () => {
+		it("maps CanvasRenderer is not yet implemented to friendly message", () => {
+			const error = new Error("webgl: CanvasRenderer is not yet implemented (after 2ms)");
+			expect(formatPixiRendererErrorMessage(error)).toBe(CANVAS_RENDERER_FALLBACK_MESSAGE);
+		});
+
+		it("returns standard error message for other errors", () => {
+			const error = new Error("WebGPU initialization failed");
+			expect(formatPixiRendererErrorMessage(error)).toBe("WebGPU initialization failed");
+		});
+
+		it("handles non-Error objects safely", () => {
+			expect(formatPixiRendererErrorMessage("string error")).toBe("string error");
+			expect(formatPixiRendererErrorMessage(null)).toBe("Unknown renderer init error");
+		});
 	});
 });

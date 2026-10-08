@@ -22,6 +22,7 @@ import {
 import {
 	destroyPixiApplication,
 	destroyPixiContainer,
+	formatPixiRendererErrorMessage,
 	initializePixiApplicationWithTimeout,
 } from "@/lib/pixiApplicationLifecycle";
 import {
@@ -188,11 +189,7 @@ type PixiRendererAttempt = {
 const PIXI_RENDERER_INIT_TIMEOUT_MS = 8_000;
 
 function toRendererErrorMessage(error: unknown): string {
-	const message = error instanceof Error ? error.message : String(error ?? "Unknown renderer init error");
-	if (message.includes("CanvasRenderer is not yet implemented")) {
-		return "WebGL is unavailable or GPU acceleration is disabled (PixiJS v8 CanvasRenderer fallback is not implemented)";
-	}
-	return message;
+	return formatPixiRendererErrorMessage(error);
 }
 
 function summarizeRendererAttempts(attempts: readonly PixiRendererAttempt[]): string {

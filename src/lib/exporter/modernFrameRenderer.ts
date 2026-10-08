@@ -76,7 +76,9 @@ import {
 	getEffectiveVideoStreamDurationSeconds,
 } from "@/lib/mediaTiming";
 import {
+	CANVAS_RENDERER_NOT_IMPLEMENTED_HINT,
 	destroyPixiApplication,
+	formatPixiRendererErrorMessage,
 	initializePixiApplicationWithTimeout,
 } from "@/lib/pixiApplicationLifecycle";
 import { isVideoWallpaperSource } from "@/lib/wallpapers";
@@ -244,7 +246,6 @@ type PixiRendererAttempt = {
 	message: string;
 };
 
-const CANVAS_RENDERER_NOT_IMPLEMENTED_HINT = "CanvasRenderer is not yet implemented";
 const NO_RENDERER_HINT = "no available renderer";
 const PIXI_RENDERER_INIT_TIMEOUT_MS = 8_000;
 const BACKGROUND_MEDIA_ELEMENT_READY_TIMEOUT_MS = 5_000;
@@ -259,7 +260,7 @@ function isCanvasRenderer(application: Application): boolean {
 }
 
 function toErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error ?? "Unknown renderer init error");
+	return formatPixiRendererErrorMessage(error);
 }
 
 function summarizeRendererAttempts(attempts: readonly PixiRendererAttempt[]): string {

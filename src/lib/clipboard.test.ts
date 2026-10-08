@@ -78,4 +78,30 @@ describe("copyTextToClipboard", () => {
 		const result = await copyTextToClipboard("failed copy");
 		expect(result).toBe(false);
 	});
+
+	it("removes the textarea even if execCommand throws an error", async () => {
+		const removeChild = vi.fn();
+		vi.stubGlobal("navigator", {
+			clipboard: { writeText: vi.fn().mockRejectedValue(new Error("Denied")) },
+		});
+		vi.stubGlobal("document", {
+			createElement: vi.fn(() => ({
+				value: "",
+				style: {},
+				setAttribute: vi.fn(),
+				select: vi.fn(),
+			})),
+			body: {
+				appendChild: vi.fn(),
+				removeChild,
+			},
+			execCommand: vi.fn(() => {
+				throw new Error("execCommand crashed");
+			}),
+		});
+
+		const result = await copyTextToClipboard("error copy");
+		expect(result).toBe(false);
+		expect(removeChild).toHaveBeenCalledTimes(1);
+	});
 });

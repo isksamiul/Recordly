@@ -114,3 +114,17 @@ export function destroyPixiContainer(container: Container | null): void {
 	container.parent?.removeChild(container);
 	container.destroy();
 }
+
+export const CANVAS_RENDERER_NOT_IMPLEMENTED_HINT = "CanvasRenderer is not yet implemented";
+export const CANVAS_RENDERER_FALLBACK_MESSAGE =
+	"WebGL is unavailable or GPU acceleration is disabled (PixiJS v8 CanvasRenderer fallback is not implemented)";
+
+export function formatPixiRendererErrorMessage(error: unknown): string {
+	const message =
+		error instanceof Error ? error.message : String(error ?? "Unknown renderer init error");
+	if (message.includes(CANVAS_RENDERER_NOT_IMPLEMENTED_HINT)) {
+		return CANVAS_RENDERER_FALLBACK_MESSAGE;
+	}
+	return message;
+}
+
