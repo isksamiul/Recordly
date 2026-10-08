@@ -10,6 +10,7 @@ import { Check } from "@/components/ui/icons";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import {
 	Dialog,
 	DialogContent,
@@ -239,11 +240,11 @@ export function CloudShareButton({
 
 	const copyShareUrl = useCallback(async () => {
 		if (!shareUrl) return;
-		try {
-			await navigator.clipboard.writeText(shareUrl);
+		const copied = await copyTextToClipboard(shareUrl);
+		if (copied) {
 			setCopied(true);
 			toast.success(t("editor.cloud.linkCopied"));
-		} catch {
+		} else {
 			setCopied(false);
 			toast.error(t("editor.cloud.copyFailed"));
 		}

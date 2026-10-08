@@ -8,6 +8,7 @@ import { ProgressBar } from "@heroui/react";
 
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { useI18n } from "@/contexts/I18nContext";
 import { ExportSettingsMenu } from "../ExportSettingsMenu";
@@ -314,8 +315,8 @@ export function EditorExportMenu(props: Props) {
 												isRenderingAudio
 													? (exportProgress?.audioProgress ?? 0) * 100
 													: (exportFinalizingProgress ??
-															exportProgress?.percentage ??
-															8),
+														exportProgress?.percentage ??
+														8),
 												100,
 											)}
 										>
@@ -368,17 +369,15 @@ export function EditorExportMenu(props: Props) {
 												variant="outline"
 												className="h-8 text-xs"
 												onClick={async () => {
-													try {
-														await navigator.clipboard.writeText(
-															exportError,
-														);
+													const copied = await copyTextToClipboard(exportError);
+													if (copied) {
 														toast.success(
 															t(
 																"editor.exportStatus.errorCopied",
 																"Error copied",
 															),
 														);
-													} catch {
+													} else {
 														toast.error(
 															t(
 																"editor.exportStatus.errorCopyFailed",

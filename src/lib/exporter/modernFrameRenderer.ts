@@ -465,8 +465,9 @@ export class FrameRenderer {
 			return;
 		}
 
+		const isWebGpu = this.rendererBackend === "webgpu";
 		const activeFilters =
-			this.shouldUseZoomMotionBlur() && this.motionBlurFilter && this.zoomBlurFilter
+			!isWebGpu && this.shouldUseZoomMotionBlur() && this.motionBlurFilter && this.zoomBlurFilter
 				? [this.motionBlurFilter, this.zoomBlurFilter]
 				: null;
 		this.videoEffectsContainer.filters = activeFilters;
@@ -592,7 +593,7 @@ export class FrameRenderer {
 		await this.setupAnnotationLayer();
 		this.setupCaptionResources();
 
-		if (this.shouldUseZoomMotionBlur()) {
+		if (this.shouldUseZoomMotionBlur() && this.rendererBackend !== "webgpu") {
 			this.zoomBlurFilter = new ZoomBlurFilter({
 				strength: 0,
 				maxKernelSize: 13,
@@ -624,13 +625,11 @@ export class FrameRenderer {
 
 		const preferredRenderBackend = this.config.preferredRenderBackend;
 		const backendOrder: ExportRenderBackend[] =
-			preferredRenderBackend === "webgl"
-				? ["webgl", "webgpu"]
-				: preferredRenderBackend === "webgpu"
-					? ["webgpu", "webgl"]
-					: typeof navigator !== "undefined" && "gpu" in navigator
-						? ["webgpu", "webgl"]
-						: ["webgl"];
+			preferredRenderBackend === "webgpu"
+				? ["webgpu", "webgl"]
+				: preferredRenderBackend === "webgl"
+					? ["webgl", "webgpu"]
+					: ["webgl", "webgpu"];
 		const failures: PixiRendererAttempt[] = [];
 
 		for (const backend of backendOrder) {

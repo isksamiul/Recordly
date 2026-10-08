@@ -163,7 +163,11 @@ function isCanvasRenderer(renderer: Application): boolean {
 }
 
 function toErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error ?? "Unknown renderer init error");
+	const message = error instanceof Error ? error.message : String(error ?? "Unknown renderer init error");
+	if (message.includes("CanvasRenderer is not yet implemented")) {
+		return "WebGL is unavailable or GPU acceleration is disabled (PixiJS v8 CanvasRenderer fallback is not implemented)";
+	}
+	return message;
 }
 
 function summarizeRendererAttempts(attempts: readonly PixiRendererAttempt[]): string {
@@ -220,6 +224,7 @@ function configureHighQuality2DContext(
 // Renders video frames with all effects (background, zoom, crop, blur, shadow) to an offscreen canvas for export.
 
 export class FrameRenderer {
+	private rendererBackend: ExportRenderBackend = "webgl";
 	private app: Application | null = null;
 	private cameraContainer: Container | null = null;
 	private videoEffectsContainer: Container | null = null;
@@ -383,6 +388,7 @@ export class FrameRenderer {
 		// Initialize PixiJS with optimized settings for export performance
 		const { app, backend } = await this.createPixiApplication(canvas);
 		this.app = app;
+		this.rendererBackend = backend;
 		console.log(`[FrameRenderer] Export renderer backend: ${backend}`);
 
 		// Setup containers
@@ -430,7 +436,7 @@ export class FrameRenderer {
 		await this.setupBackground();
 		await this.setupWebcamSource();
 
-		if ((this.config.zoomMotionBlur ?? 0) > 0) {
+		if ((this.config.zoomMotionBlur ?? 0) > 0 && this.rendererBackend !== "webgpu") {
 			this.zoomBlurFilter = new ZoomBlurFilter({ strength: 0, maxKernelSize: 13 });
 			this.motionBlurFilter = new MotionBlurFilter([0, 0], 5, 0);
 			this.videoContainer.filterArea = new Rectangle(
@@ -1960,6 +1966,10 @@ export class FrameRenderer {
 			throw new Error("Renderer not initialized");
 		}
 		return this.compositeCanvas;
+	}
+
+	getRendererBackend(): ExportRenderBackend {
+		return this.rendererBackend;
 	}
 
 	destroy(): void {
