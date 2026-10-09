@@ -290,6 +290,33 @@ describe("ModernFrameRenderer Pixi lifecycle", () => {
 	});
 });
 
+describe("ModernFrameRenderer zoom motion blur", () => {
+	it.each([
+		"webgl",
+		"webgpu",
+	] as const)("preserves enabled blur filters on %s exports", (backend) => {
+		const renderer = createRenderer() as unknown as {
+			config: { zoomMotionBlur?: number };
+			updateVideoEffectsFilterState: () => void;
+		};
+		const motionBlurFilter = {};
+		const zoomBlurFilter = {};
+		const videoEffectsContainer = { filters: null as unknown };
+		Object.assign(renderer, {
+			rendererBackend: backend,
+			motionBlurFilter,
+			zoomBlurFilter,
+			videoEffectsContainer,
+		});
+		renderer.config.zoomMotionBlur = 1;
+		renderer.updateVideoEffectsFilterState();
+		expect(videoEffectsContainer.filters).toEqual([motionBlurFilter, zoomBlurFilter]);
+		renderer.config.zoomMotionBlur = 0;
+		renderer.updateVideoEffectsFilterState();
+		expect(videoEffectsContainer.filters).toBeNull();
+	});
+});
+
 describe("ModernFrameRenderer blur export path", () => {
 	beforeEach(() => {
 		Object.assign(globalThis, {

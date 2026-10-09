@@ -444,7 +444,7 @@ export class FrameRenderer {
 		await this.setupBackground();
 		await this.setupWebcamSource();
 
-		if ((this.config.zoomMotionBlur ?? 0) > 0 && this.rendererBackend !== "webgpu") {
+		if ((this.config.zoomMotionBlur ?? 0) > 0) {
 			this.zoomBlurFilter = new ZoomBlurFilter({ strength: 0, maxKernelSize: 13 });
 			this.motionBlurFilter = new MotionBlurFilter([0, 0], 5, 0);
 			this.videoContainer.filterArea = new Rectangle(

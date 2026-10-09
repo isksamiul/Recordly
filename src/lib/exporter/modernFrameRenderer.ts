@@ -471,9 +471,8 @@ export class FrameRenderer {
 			return;
 		}
 
-		const isWebGpu = this.rendererBackend === "webgpu";
 		const activeFilters =
-			!isWebGpu && this.shouldUseZoomMotionBlur() && this.motionBlurFilter && this.zoomBlurFilter
+			this.shouldUseZoomMotionBlur() && this.motionBlurFilter && this.zoomBlurFilter
 				? [this.motionBlurFilter, this.zoomBlurFilter]
 				: null;
 		this.videoEffectsContainer.filters = activeFilters;
@@ -599,7 +598,7 @@ export class FrameRenderer {
 		await this.setupAnnotationLayer();
 		this.setupCaptionResources();
 
-		if (this.shouldUseZoomMotionBlur() && this.rendererBackend !== "webgpu") {
+		if (this.shouldUseZoomMotionBlur()) {
 			this.zoomBlurFilter = new ZoomBlurFilter({
 				strength: 0,
 				maxKernelSize: 13,
